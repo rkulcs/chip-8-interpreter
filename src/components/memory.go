@@ -3,6 +3,7 @@ package components
 import "errors"
 
 const MEM_SIZE = 4096
+const PROGRAM_START_LOCATION = 0x200
 
 type Memory struct {
 	Words [MEM_SIZE]byte
