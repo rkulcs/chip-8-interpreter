@@ -13,9 +13,6 @@ import (
 // The size of the buffer used when reading a CHIP-8 file's contents.
 const READER_BUFFER_SIZE = 1
 
-// The value by which the display should be scaled.
-const DISPLAY_SCALE = 20
-
 // Loads the provided CHIP-8 file into the memory component.
 func loadProgram(filePath string, memory *components.Memory) error {
 	file, err := os.Open(filePath)
@@ -42,7 +39,8 @@ func loadProgram(filePath string, memory *components.Memory) error {
 		currentAddress++
 	}
 
-	return nil
+	_, err = memory.ReadFrom(components.PROGRAM_START_LOCATION)
+	return err
 }
 
 // Prompts to the user to enter the name of a CHIP-8 file.
@@ -60,6 +58,12 @@ func getFileName() string {
 func main() {
 	memory := &components.Memory{}
 
+	// General purpose 8-bit registers
+	// v := [0xF]byte{}
+
+	// Program counter
+	// var pc int16
+
 	fileName := getFileName()
 	loadProgram(fileName, memory)
 
@@ -69,16 +73,8 @@ func main() {
 
 	defer sdl.Quit()
 
-	window, err := sdl.CreateWindow("CHIP-8 Interpreter",
-		sdl.WINDOWPOS_CENTERED, sdl.WINDOWPOS_CENTERED,
-		components.DISPLAY_WIDTH*DISPLAY_SCALE,
-		components.DISPLAY_HEIGHT*DISPLAY_SCALE, sdl.WINDOW_SHOWN)
-
-	if err != nil {
-		panic(err)
-	}
-
-	defer window.Destroy()
+	display := components.InitDisplay()
+	defer display.Destroy()
 
 	running := true
 
