@@ -56,3 +56,9 @@ func (display *Display) Draw(x int32, y int32) {
 	display.surface.FillRect(&rect, COLOR_WHITE)
 	display.window.UpdateSurface()
 }
+
+// Clears the display.
+func (display *Display) Clear() {
+	display.surface.FillRect(nil, COLOR_BLACK)
+	display.window.UpdateSurface()
+}
