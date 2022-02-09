@@ -45,6 +45,8 @@ func Decode(instr int32, components *components.Components) {
 		break
 	case 0xC000:
 	case 0xD000:
+		decodeDInstruction(instr, components)
+		break
 	case 0xE000:
 	case 0xF000:
 	}
@@ -190,11 +192,48 @@ func decode9Instruction(instr int32, registers *components.Registers) {
 }
 
 func decodeDInstruction(instr int32, components *components.Components) {
-	// x := (instr & 0x0100) / (0xF * 0xF)
-	// y := (instr & 0x0010) / 0xF
+	n := int(instr & 0x000F)
 
-	// vx := &(components.Registers.V[x])
-	// vy := &(components.Registers.V[y])
+	vx := &(components.Registers.V[(instr>>8)&0x000F])
+	vy := &(components.Registers.V[(instr>>4)&0x000F])
+
+	vf := &(components.Registers.V[0xF])
+	*vf = 0
+
+	x := *vx % 64
+	y := *vy % 32
+
+	for i := 0; i < n; i++ {
+		address := int(components.Registers.I) + i
+		sprite, err := components.Memory.ReadFrom(address)
+
+		if err != nil {
+			panic(err)
+		}
+
+		x = *vx % 64
+
+		for j := 0; j < 8; j++ {
+			bit := (sprite >> (7 - j)) & 0x01
+			var on bool
+
+			if bit == 1 {
+				on = true
+			} else {
+				on = false
+			}
+
+			pixelWasOn := components.Display.Draw(int32(x), int32(y), on)
+
+			if pixelWasOn {
+				*vf = 1
+			}
+
+			x = (x + 1) % 64
+		}
+
+		y = (y + 1) % 34
+	}
 }
 
 func decodeEInstruction(instr int32, components *components.Components) {

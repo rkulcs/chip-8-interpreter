@@ -1,6 +1,8 @@
 package components
 
-import "github.com/veandco/go-sdl2/sdl"
+import (
+	"github.com/veandco/go-sdl2/sdl"
+)
 
 //=== Constants ===//
 
@@ -21,6 +23,7 @@ const COLOR_BLACK = 0x00000000
 type Display struct {
 	window  *sdl.Window
 	surface *sdl.Surface
+	pixels  [DISPLAY_HEIGHT][DISPLAY_WIDTH]bool
 }
 
 //=== Display Functions ===//
@@ -42,7 +45,7 @@ func InitDisplay() Display {
 		panic(err)
 	}
 
-	return Display{window, surface}
+	return Display{window, surface, [DISPLAY_HEIGHT][DISPLAY_WIDTH]bool{}}
 }
 
 // Destroys the SDL window of the display.
@@ -51,10 +54,21 @@ func (display *Display) Destroy() {
 }
 
 // Draws a white pixel at the specified coordinates.
-func (display *Display) Draw(x int32, y int32) {
-	rect := sdl.Rect{x, y, DISPLAY_SCALE, DISPLAY_SCALE}
-	display.surface.FillRect(&rect, COLOR_WHITE)
+func (display *Display) Draw(x int32, y int32, on bool) (wasOn bool) {
+	rect := sdl.Rect{x * DISPLAY_SCALE, y * DISPLAY_SCALE, DISPLAY_SCALE, DISPLAY_SCALE}
+
+	if (display.pixels[y][x] && on) || !on {
+		wasOn = display.pixels[y][x]
+		display.pixels[y][x] = false
+		display.surface.FillRect(&rect, COLOR_BLACK)
+	} else if on {
+		wasOn = false
+		display.pixels[y][x] = true
+		display.surface.FillRect(&rect, COLOR_WHITE)
+	}
+
 	display.window.UpdateSurface()
+	return
 }
 
 // Clears the display.

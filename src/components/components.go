@@ -15,5 +15,7 @@ func InitComponents(fileName string) Components {
 	registers := &Registers{}
 	memory := InitMemory(fileName)
 
+	registers.PC = 0x200
+
 	return Components{&display, registers, &memory}
 }

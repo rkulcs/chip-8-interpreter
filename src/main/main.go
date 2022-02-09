@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"components"
 	"fmt"
+	"instructions"
 	"os"
 
 	"github.com/veandco/go-sdl2/sdl"
@@ -45,6 +46,19 @@ func main() {
 				running = false
 				break
 			}
+		}
+
+		if components.Registers.PC < 4096 {
+			firstPart, err := components.Memory.ReadFrom(int(components.Registers.PC))
+			secondPart, err := components.Memory.ReadFrom(int(components.Registers.PC) + 1)
+			components.Registers.PC += 0x2
+
+			if err != nil {
+				panic(err)
+			}
+
+			instruction := (int32(firstPart) << 8) + int32(secondPart)
+			instructions.Decode(instruction, &components)
 		}
 	}
 }
