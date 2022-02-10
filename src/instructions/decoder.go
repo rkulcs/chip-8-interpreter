@@ -1,6 +1,10 @@
 package instructions
 
-import "components"
+import (
+	"components"
+	"math/rand"
+	"time"
+)
 
 func Decode(instr int32, components *components.Components) {
 	firstNibble := instr & 0xF000
@@ -44,6 +48,8 @@ func Decode(instr int32, components *components.Components) {
 			int16(components.Registers.V[0x0])
 		break
 	case 0xC000:
+		decodeCInstruction(instr, components.Registers)
+		break
 	case 0xD000:
 		decodeDInstruction(instr, components)
 		break
@@ -191,7 +197,18 @@ func decode9Instruction(instr int32, registers *components.Registers) {
 	}
 }
 
+func decodeCInstruction(instr int32, registers *components.Registers) {
+	x := (instr >> 8) & 0x000F
+	vx := &(registers.V[x])
+
+	rand.Seed(time.Now().UnixNano())
+
+	var randomByte byte = byte(rand.Intn(256))
+	*vx = randomByte & byte(instr&0x00FF)
+}
+
 func decodeDInstruction(instr int32, components *components.Components) {
+	// Get the number of bytes to read sprite data from
 	n := int(instr & 0x000F)
 
 	vx := &(components.Registers.V[(instr>>8)&0x000F])
@@ -204,6 +221,7 @@ func decodeDInstruction(instr int32, components *components.Components) {
 	y := *vy % 32
 
 	for i := 0; i < n; i++ {
+		// Get the next byte containing sprite data
 		address := int(components.Registers.I) + i
 		sprite, err := components.Memory.ReadFrom(address)
 
@@ -211,9 +229,11 @@ func decodeDInstruction(instr int32, components *components.Components) {
 			panic(err)
 		}
 
+		// Reset x to be the x-coordinate stored in Vx
 		x = *vx % 64
 
 		for j := 0; j < 8; j++ {
+			// Read the next bit from the sprite
 			bit := (sprite >> (7 - j)) & 0x01
 			var on bool
 
@@ -223,16 +243,22 @@ func decodeDInstruction(instr int32, components *components.Components) {
 				on = false
 			}
 
+			// Draw the sprite onto the screen
 			pixelWasOn := components.Display.Draw(int32(x), int32(y), on)
 
+			// Set VF to 1 if there was a white pixel at the current coordinates
 			if pixelWasOn {
 				*vf = 1
 			}
 
-			x = (x + 1) % 64
+			if x < 63 {
+				x++
+			}
 		}
 
-		y = (y + 1) % 34
+		if y < 33 {
+			y++
+		}
 	}
 }
 

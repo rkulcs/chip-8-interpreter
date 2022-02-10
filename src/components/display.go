@@ -53,7 +53,10 @@ func (display *Display) Destroy() {
 	display.window.Destroy()
 }
 
-// Draws a white pixel at the specified coordinates.
+// Draws a pixel at the specified coordinates. If the value of "on" is true,
+// then a white pixel will be drawn if there is a black pixel at the specified
+// location. Otherwise, a black pixel will be drawn. True is returned if the
+// pixel at the given coordinates was white, otherwise, false is returned.
 func (display *Display) Draw(x int32, y int32, on bool) (wasOn bool) {
 	rect := sdl.Rect{x * DISPLAY_SCALE, y * DISPLAY_SCALE, DISPLAY_SCALE, DISPLAY_SCALE}
 
