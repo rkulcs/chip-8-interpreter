@@ -17,7 +17,7 @@ func Decode(instr int32, components *components.Components) {
 		components.Registers.PC = int16(instr & 0x0FFF)
 		break
 	case 0x2000:
-		// TODO
+		decode2Instruction(instr, components)
 		break
 	case 0x3000:
 		decode3Instruction(instr, components.Registers)
@@ -62,8 +62,18 @@ func decode0Instruction(instr int32, components *components.Components) {
 	if instr == 0x00E0 {
 		components.Display.Clear()
 	} else if instr == 0x00EE {
-		// TODO
+		var err error
+		components.Registers.PC, err = components.Stack.Pop()
+
+		if err != nil {
+			panic(err)
+		}
 	}
+}
+
+func decode2Instruction(instr int32, components *components.Components) {
+	components.Stack.Push(components.Registers.PC)
+	components.Registers.PC = int16(instr & 0x0FFF)
 }
 
 func decode3Instruction(instr int32, registers *components.Registers) {
