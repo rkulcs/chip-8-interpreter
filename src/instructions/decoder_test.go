@@ -127,3 +127,25 @@ func TestDecode7Instruction(test *testing.T) {
 		value++
 	}
 }
+
+func TestDecodeEInstruction(test *testing.T) {
+	registers := &components.Registers{}
+	expectedPC := 0x2
+
+	registers.V[3] = 0x4
+	instr := 0xE39E
+	decodeEInstruction(int32(instr), KEY_4, registers)
+
+	if registers.PC != int16(expectedPC) {
+		test.Errorf("PC is not incremented correctly.")
+	}
+
+	instr = 0xE3A1
+	decodeEInstruction(int32(instr), KEY_4, registers)
+	decodeEInstruction(int32(instr), KEY_A, registers)
+	expectedPC += 0x2
+
+	if registers.PC != int16(expectedPC) {
+		test.Errorf("PC is not incremented correctly.")
+	}
+}

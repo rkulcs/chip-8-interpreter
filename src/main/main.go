@@ -23,7 +23,7 @@ func getFileName() string {
 }
 
 func main() {
-	// Get the file name of the CHIP-8 program to run.
+	// Get the file name of the CHIP-8 program to run
 	fileName := getFileName()
 
 	// Initialize SDL
@@ -40,10 +40,16 @@ func main() {
 	running := true
 
 	for running {
+		// Stores the virtual key code of the last key pressed
+		var keyCode int
+
 		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
-			switch event.(type) {
+			switch eventType := event.(type) {
 			case *sdl.QuitEvent:
 				running = false
+				break
+			case *sdl.KeyboardEvent:
+				keyCode = int(eventType.Keysym.Sym)
 				break
 			}
 		}
@@ -58,7 +64,7 @@ func main() {
 			}
 
 			instruction := (int32(firstPart) << 8) + int32(secondPart)
-			instructions.Decode(instruction, &components)
+			instructions.Decode(instruction, &components, keyCode)
 		}
 	}
 }

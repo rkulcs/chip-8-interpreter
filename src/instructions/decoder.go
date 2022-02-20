@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func Decode(instr int32, components *components.Components) {
+func Decode(instr int32, components *components.Components, keyCode int) {
 	firstNibble := instr & 0xF000
 
 	switch firstNibble {
@@ -54,6 +54,8 @@ func Decode(instr int32, components *components.Components) {
 		decodeDInstruction(instr, components)
 		break
 	case 0xE000:
+		decodeEInstruction(instr, keyCode, components.Registers)
+		break
 	case 0xF000:
 	}
 }
@@ -272,8 +274,17 @@ func decodeDInstruction(instr int32, components *components.Components) {
 	}
 }
 
-func decodeEInstruction(instr int32, components *components.Components) {
+func decodeEInstruction(instr int32, keyCode int, registers *components.Registers) {
+	vx := &(registers.V[(instr>>8)&0x000F])
+	instrType := instr & 0x00FF
 
+	if (instrType == 0x9E) && (*vx == GetInputKeyValue(keyCode)) {
+		registers.PC += 0x2
+	}
+
+	if (instrType == 0xA1) && (*vx != GetInputKeyValue(keyCode)) {
+		registers.PC += 0x2
+	}
 }
 
 func decodeFInstruction(instr int32, components *components.Components) {
