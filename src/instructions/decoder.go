@@ -276,17 +276,35 @@ func decodeDInstruction(instr int32, components *components.Components) {
 
 func decodeEInstruction(instr int32, keyCode int, registers *components.Registers) {
 	vx := &(registers.V[(instr>>8)&0x000F])
-	instrType := instr & 0x00FF
+	op := instr & 0x00FF
 
-	if (instrType == 0x9E) && (*vx == GetInputKeyValue(keyCode)) {
+	if (op == 0x9E) && (*vx == GetInputKeyValue(keyCode)) {
 		registers.PC += 0x2
 	}
 
-	if (instrType == 0xA1) && (*vx != GetInputKeyValue(keyCode)) {
+	if (op == 0xA1) && (*vx != GetInputKeyValue(keyCode)) {
 		registers.PC += 0x2
 	}
 }
 
 func decodeFInstruction(instr int32, components *components.Components) {
+	vx := &(components.Registers.V[(instr>>8)&0x000F])
+	op := instr & 0x00FF
 
+	switch op {
+	case 0x07:
+		*vx = components.DelayTimer.Value
+	case 0x0A:
+		// TODO
+	case 0x15:
+		components.DelayTimer.Value = *vx
+	case 0x18:
+		// TODO
+	case 0x1E:
+		components.Registers.I += int16(*vx)
+	case 0x29:
+	case 0x33:
+	case 0x55:
+	case 0x65:
+	}
 }

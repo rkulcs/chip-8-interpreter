@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"instructions"
 	"os"
+	"time"
 
 	"github.com/veandco/go-sdl2/sdl"
 )
@@ -66,5 +67,8 @@ func main() {
 			instruction := (int32(firstPart) << 8) + int32(secondPart)
 			instructions.Decode(instruction, &components, keyCode)
 		}
+
+		time.Sleep(time.Second / 60)
+		components.DelayTimer.Decrement()
 	}
 }
