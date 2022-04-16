@@ -57,6 +57,8 @@ func Decode(instr int32, components *components.Components, keyCode int) {
 		decodeEInstruction(instr, keyCode, components.Registers)
 		break
 	case 0xF000:
+		decodeFInstruction(instr, components)
+		break
 	}
 }
 
@@ -204,7 +206,7 @@ func decode9Instruction(instr int32, registers *components.Registers) {
 	vx := &(registers.V[x])
 	vy := &(registers.V[y])
 
-	if *vx == *vy {
+	if *vx != *vy {
 		registers.PC += 2
 	}
 }
@@ -268,7 +270,7 @@ func decodeDInstruction(instr int32, components *components.Components) {
 			}
 		}
 
-		if y < 33 {
+		if y < 31 {
 			y++
 		}
 	}
@@ -294,17 +296,65 @@ func decodeFInstruction(instr int32, components *components.Components) {
 	switch op {
 	case 0x07:
 		*vx = components.DelayTimer.Value
+		break
 	case 0x0A:
 		// TODO
 	case 0x15:
 		components.DelayTimer.Value = *vx
+		break
 	case 0x18:
 		// TODO
 	case 0x1E:
 		components.Registers.I += int16(*vx)
+		break
 	case 0x29:
 	case 0x33:
-	case 0x55:
-	case 0x65:
+		storeBCD(vx, components)
+		break
+		// case 0x55:
+		// 	storeV(components)
+		// 	break
+		// case 0x65:
+		// 	loadV(components)
+		// 	break
+	}
+}
+
+func storeBCD(vx *byte, components *components.Components) {
+	value := *vx
+	currentAddress := components.Registers.I
+
+	var div byte = 100
+
+	for div > 0 {
+		digit := value / div
+		components.Memory.WriteTo(int(currentAddress), digit)
+		currentAddress++
+		value -= digit * div
+		div /= 10
+	}
+}
+
+func storeV(components *components.Components) {
+	currentAddress := components.Registers.I
+
+	for i := 0; i < 16; i++ {
+		components.Memory.WriteTo(int(currentAddress), components.Registers.V[i])
+		currentAddress++
+	}
+}
+
+func loadV(components *components.Components) {
+	currentAddress := components.Registers.I
+
+	for i := 0; i < 16; i++ {
+		value, err := components.Memory.ReadFrom((int(currentAddress)))
+
+		if err != nil {
+			panic("Unable to read memory contents")
+		}
+
+		components.Registers.V[i] = value
+		currentAddress++
 	}
 }

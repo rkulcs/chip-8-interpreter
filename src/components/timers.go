@@ -1,10 +1,10 @@
 package components
 
-type DelayTimer struct {
+type Timer struct {
 	Value byte
 }
 
-func (timer *DelayTimer) Decrement() {
+func (timer *Timer) Decrement() {
 	if timer.Value == 0 {
 		return
 	} else {

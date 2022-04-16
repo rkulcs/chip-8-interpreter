@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"instructions"
 	"os"
-	"time"
 
 	"github.com/veandco/go-sdl2/sdl"
 )
@@ -68,7 +67,8 @@ func main() {
 			instructions.Decode(instruction, &components, keyCode)
 		}
 
-		time.Sleep(time.Second / 60)
+		// time.Sleep(time.Second / 60)
 		components.DelayTimer.Decrement()
+		components.SoundTimer.Decrement()
 	}
 }
