@@ -18,6 +18,9 @@ const MEM_SIZE = 4096
 // The address of the first instruction of the program to execute.
 const PROGRAM_START_LOCATION = 0x200
 
+// The address from which the font data should be stored
+const FONT_START_LOCATION = 0x50
+
 //=== Struct Definitions ===//
 
 type Memory struct {
@@ -30,6 +33,7 @@ type Memory struct {
 // into it.
 func InitMemory(fileName string) Memory {
 	memory := Memory{}
+	memory.loadFont()
 	memory.loadProgram(fileName)
 	return memory
 }
@@ -52,6 +56,18 @@ func (memory *Memory) WriteTo(address int, data byte) error {
 
 	memory.Words[address] = data
 	return nil
+}
+
+func (memory *Memory) loadFont() {
+
+	currentAddress := FONT_START_LOCATION
+
+	for digit := 0; digit < len(Font); digit++ {
+		for i := 0; i < len(Font[digit]); i++ {
+			memory.WriteTo(currentAddress, Font[digit][i])
+			currentAddress++
+		}
+	}
 }
 
 // Loads the provided CHIP-8 file into the memory component.

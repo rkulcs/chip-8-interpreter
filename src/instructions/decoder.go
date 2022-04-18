@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func Decode(instr int32, components *components.Components, keyCode int) {
+func Decode(instr int32, components *components.Components, keyCode int) (x byte, pause bool) {
 	firstNibble := instr & 0xF000
 
 	switch firstNibble {
@@ -57,9 +57,11 @@ func Decode(instr int32, components *components.Components, keyCode int) {
 		decodeEInstruction(instr, keyCode, components.Registers)
 		break
 	case 0xF000:
-		decodeFInstruction(instr, components)
-		break
+		x, pause := decodeFInstruction(instr, components)
+		return x, pause
 	}
+
+	return 0, false
 }
 
 func decode0Instruction(instr int32, components *components.Components) {
@@ -265,12 +267,16 @@ func decodeDInstruction(instr int32, components *components.Components) {
 				*vf = 1
 			}
 
-			if x < 63 {
+			if x == 63 {
+				continue
+			} else {
 				x++
 			}
 		}
 
-		if y < 31 {
+		if y == 31 {
+			continue
+		} else {
 			y++
 		}
 	}
@@ -289,8 +295,9 @@ func decodeEInstruction(instr int32, keyCode int, registers *components.Register
 	}
 }
 
-func decodeFInstruction(instr int32, components *components.Components) {
-	vx := &(components.Registers.V[(instr>>8)&0x000F])
+func decodeFInstruction(instr int32, components *components.Components) (x byte, pause bool) {
+	x = byte((instr >> 8) & 0x000F)
+	vx := &(components.Registers.V[x])
 	op := instr & 0x00FF
 
 	switch op {
@@ -298,26 +305,31 @@ func decodeFInstruction(instr int32, components *components.Components) {
 		*vx = components.DelayTimer.Value
 		break
 	case 0x0A:
-		// TODO
+		// Signal that the program needs to be paused
+		pause = true
+		return x, pause
 	case 0x15:
 		components.DelayTimer.Value = *vx
 		break
 	case 0x18:
-		// TODO
+		components.SoundTimer.Value = *vx
 	case 0x1E:
 		components.Registers.I += int16(*vx)
 		break
 	case 0x29:
+		components.Registers.I = int16(components.Display.GetFontLocation(*vx))
 	case 0x33:
 		storeBCD(vx, components)
 		break
-		// case 0x55:
-		// 	storeV(components)
-		// 	break
-		// case 0x65:
-		// 	loadV(components)
-		// 	break
+	case 0x55:
+		storeV(components)
+		break
+	case 0x65:
+		loadV(components)
+		break
 	}
+
+	return 0, false
 }
 
 func storeBCD(vx *byte, components *components.Components) {

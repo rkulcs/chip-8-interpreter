@@ -6,6 +6,23 @@ import (
 
 //=== Constants ===//
 
+var Font [][]byte = [][]byte{{0xF0, 0x90, 0x90, 0x90, 0xF0},
+	{0x20, 0x60, 0x20, 0x20, 0x70},
+	{0xF0, 0x10, 0xF0, 0x80, 0xF0},
+	{0xF0, 0x10, 0xF0, 0x10, 0xF0},
+	{0x90, 0x90, 0xF0, 0x10, 0x10},
+	{0xF0, 0x80, 0xF0, 0x10, 0xF0},
+	{0xF0, 0x80, 0xF0, 0x90, 0xF0},
+	{0xF0, 0x10, 0x20, 0x40, 0x40},
+	{0xF0, 0x90, 0xF0, 0x90, 0xF0},
+	{0xF0, 0x90, 0xF0, 0x10, 0xF0},
+	{0xF0, 0x90, 0xF0, 0x90, 0x90},
+	{0xE0, 0x90, 0xE0, 0x90, 0xE0},
+	{0xF0, 0x80, 0x80, 0x80, 0xF0},
+	{0xE0, 0x90, 0x90, 0x90, 0xE0},
+	{0xF0, 0x80, 0xF0, 0x80, 0xF0},
+	{0xF0, 0x80, 0xF0, 0x80, 0x80}}
+
 // The value by which the display should be scaled.
 const DISPLAY_SCALE = 10
 
@@ -60,11 +77,11 @@ func (display *Display) Destroy() {
 func (display *Display) Draw(x int32, y int32, on bool) (wasOn bool) {
 	rect := sdl.Rect{x * DISPLAY_SCALE, y * DISPLAY_SCALE, DISPLAY_SCALE, DISPLAY_SCALE}
 
-	if (display.pixels[y][x] && on) || !on {
-		wasOn = display.pixels[y][x]
+	if !on {
+		wasOn = true
 		display.pixels[y][x] = false
 		display.surface.FillRect(&rect, COLOR_BLACK)
-	} else if on {
+	} else {
 		wasOn = false
 		display.pixels[y][x] = true
 		display.surface.FillRect(&rect, COLOR_WHITE)
@@ -78,4 +95,9 @@ func (display *Display) Draw(x int32, y int32, on bool) (wasOn bool) {
 func (display *Display) Clear() {
 	display.surface.FillRect(nil, COLOR_BLACK)
 	display.window.UpdateSurface()
+}
+
+// Gets the location of the font of the provided hexadecimal digit.
+func (display *Display) GetFontLocation(digit byte) int {
+	return FONT_START_LOCATION + (5 * int(digit))
 }

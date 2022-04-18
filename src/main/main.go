@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"instructions"
 	"os"
+	"time"
 
 	"github.com/veandco/go-sdl2/sdl"
 )
@@ -39,6 +40,13 @@ func main() {
 
 	running := true
 
+	// Keeps track of whether the execution of the program is paused
+	var pause bool
+
+	// Keeps track of the index of the V register which may be used to store
+	// the value of a key pressed
+	var x byte
+
 	for running {
 		// Stores the virtual key code of the last key pressed
 		var keyCode int
@@ -54,7 +62,13 @@ func main() {
 			}
 		}
 
-		if components.Registers.PC < 4096 {
+		if pause {
+			components.Registers.V[x] = instructions.GetInputKeyValue(keyCode)
+			x = 0
+			pause = false
+		}
+
+		if (components.Registers.PC < 4096) && !pause {
 			firstPart, err := components.Memory.ReadFrom(int(components.Registers.PC))
 			secondPart, err := components.Memory.ReadFrom(int(components.Registers.PC) + 1)
 			components.Registers.PC += 0x2
@@ -64,11 +78,13 @@ func main() {
 			}
 
 			instruction := (int32(firstPart) << 8) + int32(secondPart)
-			instructions.Decode(instruction, &components, keyCode)
+			x, pause = instructions.Decode(instruction, &components, keyCode)
 		}
 
-		// time.Sleep(time.Second / 60)
-		components.DelayTimer.Decrement()
-		components.SoundTimer.Decrement()
+		if !pause {
+			time.Sleep(time.Second / 60)
+			components.DelayTimer.Decrement()
+			components.SoundTimer.Decrement()
+		}
 	}
 }
