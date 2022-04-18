@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"instructions"
 	"os"
-	"time"
 
 	"github.com/veandco/go-sdl2/sdl"
 )
@@ -82,7 +81,7 @@ func main() {
 		}
 
 		if !pause {
-			time.Sleep(time.Second / 60)
+			// time.Sleep(time.Second / 60)
 			components.DelayTimer.Decrement()
 			components.SoundTimer.Decrement()
 		}

@@ -157,17 +157,17 @@ func decode8Instruction(instr int32, registers *components.Registers) {
 
 		break
 	case 0x5:
-		*vx = *vx - *vy
-
 		if *vx > *vy {
 			*vf = 1
 		} else {
 			*vf = 0
 		}
 
+		*vx = *vx - *vy
+
 		break
 	case 0x6:
-		lsb := instr & 0x000F
+		lsb := *vx & 0x0001
 
 		if lsb == 1 {
 			*vf = 1
@@ -188,9 +188,9 @@ func decode8Instruction(instr int32, registers *components.Registers) {
 
 		break
 	case 0xE:
-		msb := instr & 0xF000
+		msb := *vx >> 7
 
-		if msb == 0x1000 {
+		if msb == 1 {
 			*vf = 1
 		} else {
 			*vf = 0
