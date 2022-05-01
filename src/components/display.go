@@ -77,12 +77,12 @@ func (display *Display) Destroy() {
 func (display *Display) Draw(x int32, y int32, on bool) (wasOn bool) {
 	rect := sdl.Rect{x * DISPLAY_SCALE, y * DISPLAY_SCALE, DISPLAY_SCALE, DISPLAY_SCALE}
 
-	if !on {
-		wasOn = true
+	wasOn = display.pixels[y][x]
+
+	if wasOn && on {
 		display.pixels[y][x] = false
 		display.surface.FillRect(&rect, COLOR_BLACK)
-	} else {
-		wasOn = false
+	} else if !wasOn && on {
 		display.pixels[y][x] = true
 		display.surface.FillRect(&rect, COLOR_WHITE)
 	}

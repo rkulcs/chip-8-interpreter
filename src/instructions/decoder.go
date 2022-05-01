@@ -245,7 +245,7 @@ func decodeDInstruction(instr int32, components *components.Components) {
 			panic(err)
 		}
 
-		// Reset x to be the x-coordinate stored in Vx
+		// Reset the value of x
 		x = *vx % 64
 
 		for j := 0; j < 8; j++ {
@@ -263,19 +263,19 @@ func decodeDInstruction(instr int32, components *components.Components) {
 			pixelWasOn := components.Display.Draw(int32(x), int32(y), on)
 
 			// Set VF to 1 if there was a white pixel at the current coordinates
-			if pixelWasOn {
+			if pixelWasOn && on {
 				*vf = 1
 			}
 
 			if x == 63 {
-				continue
+				break
 			} else {
 				x++
 			}
 		}
 
 		if y == 31 {
-			continue
+			break
 		} else {
 			y++
 		}
@@ -286,11 +286,13 @@ func decodeEInstruction(instr int32, keyCode int, registers *components.Register
 	vx := &(registers.V[(instr>>8)&0x000F])
 	op := instr & 0x00FF
 
-	if (op == 0x9E) && (*vx == GetInputKeyValue(keyCode)) {
+	key, pressed := GetInputKeyValue(keyCode)
+
+	if pressed && (op == 0x9E) && (*vx == key) {
 		registers.PC += 0x2
 	}
 
-	if (op == 0xA1) && (*vx != GetInputKeyValue(keyCode)) {
+	if (op == 0xA1) && (*vx != key) {
 		registers.PC += 0x2
 	}
 }
@@ -313,11 +315,13 @@ func decodeFInstruction(instr int32, components *components.Components) (x byte,
 		break
 	case 0x18:
 		components.SoundTimer.Value = *vx
+		break
 	case 0x1E:
 		components.Registers.I += int16(*vx)
 		break
 	case 0x29:
 		components.Registers.I = int16(components.Display.GetFontLocation(*vx))
+		break
 	case 0x33:
 		storeBCD(vx, components)
 		break
@@ -342,7 +346,7 @@ func storeBCD(vx *byte, components *components.Components) {
 		digit := value / div
 		components.Memory.WriteTo(int(currentAddress), digit)
 		currentAddress++
-		value -= digit * div
+		value -= (digit * div)
 		div /= 10
 	}
 }
