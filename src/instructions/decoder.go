@@ -286,6 +286,10 @@ func decodeEInstruction(instr int32, keyCode int, registers *components.Register
 	vx := &(registers.V[(instr>>8)&0x000F])
 	op := instr & 0x00FF
 
+	if keyCode == 0 {
+		return
+	}
+
 	key, pressed := GetInputKeyValue(keyCode)
 
 	if pressed && (op == 0x9E) && (*vx == key) {

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"instructions"
 	"os"
+	"time"
 
 	"github.com/veandco/go-sdl2/sdl"
 )
@@ -22,10 +23,59 @@ func getFileName() string {
 	return fileName
 }
 
+func handleInput() (int, bool) {
+	// Stores the virtual key code of the last key pressed
+	var keyCode int
+
+	for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
+		switch eventType := event.(type) {
+		case *sdl.QuitEvent:
+			return -1, false
+			break
+		case *sdl.KeyboardEvent:
+			keyCode = int(eventType.Keysym.Sym)
+			break
+		}
+	}
+
+	return keyCode, true
+}
+
+func executeInstructions(pause bool, x byte, keyCode int, components *components.Components) (byte, bool) {
+	if pause {
+		key, pressed := instructions.GetInputKeyValue(keyCode)
+
+		if pressed {
+			components.Registers.V[x] = key
+			x = 0
+			pause = false
+		}
+	}
+
+	if (components.Registers.PC < 4096) && !pause {
+		firstPart, err := components.Memory.ReadFrom(int(components.Registers.PC))
+		secondPart, err := components.Memory.ReadFrom(int(components.Registers.PC) + 1)
+		components.Registers.PC += 0x2
+
+		if err != nil {
+			panic(err)
+		}
+
+		instruction := (int32(firstPart) << 8) + int32(secondPart)
+		x, pause = instructions.Decode(instruction, components, keyCode)
+	}
+
+	if !pause {
+		components.DelayTimer.Decrement()
+		components.SoundTimer.Decrement()
+	}
+
+	return x, pause
+}
+
 func main() {
 	// Get the file name of the CHIP-8 program to run
-	// fileName := getFileName()
-	fileName := "keypad.ch8"
+	fileName := getFileName()
 
 	// Initialize SDL
 	if err := sdl.Init(sdl.INIT_EVERYTHING); err != nil {
@@ -41,53 +91,25 @@ func main() {
 	running := true
 
 	// Keeps track of whether the execution of the program is paused
-	var pause bool
+	pause := false
 
 	// Keeps track of the index of the V register which may be used to store
 	// the value of a key pressed
 	var x byte
 
+	// The keycode of the last key pressed
+	var keyCode int
+
 	for running {
-		// Stores the virtual key code of the last key pressed
-		var keyCode int
+		frameStartTime := time.Now()
 
-		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
-			switch eventType := event.(type) {
-			case *sdl.QuitEvent:
-				running = false
-				break
-			case *sdl.KeyboardEvent:
-				keyCode = int(eventType.Keysym.Sym)
-				break
-			}
-		}
+		keyCode, running = handleInput()
+		x, pause = executeInstructions(pause, x, keyCode, &components)
 
-		if pause {
-			key, pressed := instructions.GetInputKeyValue(keyCode)
+		elapsedTime := float32(time.Since(frameStartTime).Seconds())
 
-			if pressed {
-				components.Registers.V[x] = key
-				x = 0
-				pause = false
-			}
-		}
-
-		if (components.Registers.PC < 4096) && !pause {
-			firstPart, err := components.Memory.ReadFrom(int(components.Registers.PC))
-			secondPart, err := components.Memory.ReadFrom(int(components.Registers.PC) + 1)
-			components.Registers.PC += 0x2
-
-			if err != nil {
-				panic(err)
-			}
-
-			instruction := (int32(firstPart) << 8) + int32(secondPart)
-			x, pause = instructions.Decode(instruction, &components, keyCode)
-		}
-
-		if !pause {
-			components.DelayTimer.Decrement()
-			components.SoundTimer.Decrement()
+		if elapsedTime < 0.005 {
+			sdl.Delay(5 - uint32(elapsedTime*1000))
 		}
 	}
 }
