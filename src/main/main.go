@@ -25,34 +25,35 @@ func getFileName() string {
 
 func handleInput() (int, bool) {
 	// Stores the virtual key code of the last key pressed
-	var keyCode int
+	keyCode := -1
 
-	for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
-		switch eventType := event.(type) {
-		case *sdl.QuitEvent:
-			return -1, false
-			break
-		case *sdl.KeyboardEvent:
-			keyCode = int(eventType.Keysym.Sym)
-			break
-		}
+	event := sdl.PollEvent()
+
+	switch eventType := event.(type) {
+	case *sdl.QuitEvent:
+		return -1, false
+	case *sdl.KeyboardEvent:
+		keyCode = int(eventType.Keysym.Sym)
+		return keyCode, true
 	}
+
+	// for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
+	// 	switch eventType := event.(type) {
+	// 	case *sdl.QuitEvent:
+	// 		return -1, false
+	// 		break
+	// 	case *sdl.KeyboardEvent:
+	// 		keyCode = int(eventType.Keysym.Sym)
+	// 		break
+	// 	}
+	// }
 
 	return keyCode, true
 }
 
-func executeInstructions(pause bool, x byte, keyCode int, components *components.Components) (byte, bool) {
-	if pause {
-		key, pressed := instructions.GetInputKeyValue(keyCode)
+func executeInstructions(keyCode int, components *components.Components) {
 
-		if pressed {
-			components.Registers.V[x] = key
-			x = 0
-			pause = false
-		}
-	}
-
-	if (components.Registers.PC < 4096) && !pause {
+	if components.Registers.PC < 4096 {
 		firstPart, err := components.Memory.ReadFrom(int(components.Registers.PC))
 		secondPart, err := components.Memory.ReadFrom(int(components.Registers.PC) + 1)
 		components.Registers.PC += 0x2
@@ -62,15 +63,12 @@ func executeInstructions(pause bool, x byte, keyCode int, components *components
 		}
 
 		instruction := (int32(firstPart) << 8) + int32(secondPart)
-		x, pause = instructions.Decode(instruction, components, keyCode)
+
+		instructions.Decode(instruction, components, keyCode)
 	}
 
-	if !pause {
-		components.DelayTimer.Decrement()
-		components.SoundTimer.Decrement()
-	}
-
-	return x, pause
+	components.DelayTimer.Decrement()
+	components.SoundTimer.Decrement()
 }
 
 func main() {
@@ -90,13 +88,6 @@ func main() {
 
 	running := true
 
-	// Keeps track of whether the execution of the program is paused
-	pause := false
-
-	// Keeps track of the index of the V register which may be used to store
-	// the value of a key pressed
-	var x byte
-
 	// The keycode of the last key pressed
 	var keyCode int
 
@@ -104,7 +95,7 @@ func main() {
 		frameStartTime := time.Now()
 
 		keyCode, running = handleInput()
-		x, pause = executeInstructions(pause, x, keyCode, &components)
+		executeInstructions(keyCode, &components)
 
 		elapsedTime := float32(time.Since(frameStartTime).Seconds())
 
