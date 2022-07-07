@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func Decode(instr int32, components *components.Components, keyCode int) (x byte, pause bool) {
+func Decode(instr int32, components *components.Components, keyCode int) {
 	firstNibble := instr & 0xF000
 
 	switch firstNibble {
@@ -57,11 +57,9 @@ func Decode(instr int32, components *components.Components, keyCode int) (x byte
 		decodeEInstruction(instr, keyCode, components.Registers)
 		break
 	case 0xF000:
-		x, pause := decodeFInstruction(instr, components)
-		return x, pause
+		decodeFInstruction(instr, components, keyCode)
+		break
 	}
-
-	return 0, false
 }
 
 func decode0Instruction(instr int32, components *components.Components) {
@@ -260,25 +258,29 @@ func decodeDInstruction(instr int32, components *components.Components) {
 			}
 
 			// Draw the sprite onto the screen
-			pixelWasOn := components.Display.Draw(int32(x), int32(y), on)
+			clearedPixel := components.Display.Draw(int32(x), int32(y), on)
 
-			// Set VF to 1 if there was a white pixel at the current coordinates
-			if pixelWasOn && on {
+			// Set VF to 1 if both the sprite and pixel on the screen were on
+			if clearedPixel {
 				*vf = 1
 			}
 
-			if x == 63 {
-				break
-			} else {
+			if x < 63 {
 				x++
+			} else {
+				continue
 			}
+
+			// x = (x + 1) % 64
 		}
 
-		if y == 31 {
-			break
-		} else {
+		if y < 31 {
 			y++
+		} else {
+			continue
 		}
+
+		// y = (y + 1) % 32
 	}
 }
 
@@ -301,8 +303,8 @@ func decodeEInstruction(instr int32, keyCode int, registers *components.Register
 	}
 }
 
-func decodeFInstruction(instr int32, components *components.Components) (x byte, pause bool) {
-	x = byte((instr >> 8) & 0x000F)
+func decodeFInstruction(instr int32, components *components.Components, keyCode int) {
+	x := byte((instr >> 8) & 0x000F)
 	vx := &(components.Registers.V[x])
 	op := instr & 0x00FF
 
@@ -311,9 +313,15 @@ func decodeFInstruction(instr int32, components *components.Components) (x byte,
 		*vx = components.DelayTimer.Value
 		break
 	case 0x0A:
-		// Signal that the program needs to be paused
-		pause = true
-		return x, pause
+		key, pressed := GetInputKeyValue(keyCode)
+
+		if !pressed {
+			components.Registers.PC -= 2
+		} else {
+			*vx = key
+		}
+
+		break
 	case 0x15:
 		components.DelayTimer.Value = *vx
 		break
@@ -336,8 +344,6 @@ func decodeFInstruction(instr int32, components *components.Components) (x byte,
 		loadV(components)
 		break
 	}
-
-	return 0, false
 }
 
 func storeBCD(vx *byte, components *components.Components) {

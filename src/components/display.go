@@ -74,17 +74,23 @@ func (display *Display) Destroy() {
 // then a white pixel will be drawn if there is a black pixel at the specified
 // location. Otherwise, a black pixel will be drawn. True is returned if the
 // pixel at the given coordinates was white, otherwise, false is returned.
-func (display *Display) Draw(x int32, y int32, on bool) (wasOn bool) {
+func (display *Display) Draw(x int32, y int32, on bool) (clearedPixel bool) {
 	rect := sdl.Rect{x * DISPLAY_SCALE, y * DISPLAY_SCALE, DISPLAY_SCALE, DISPLAY_SCALE}
 
-	wasOn = display.pixels[y][x]
+	wasOn := display.pixels[y][x]
 
-	if wasOn && on {
-		display.pixels[y][x] = false
-		display.surface.FillRect(&rect, COLOR_BLACK)
-	} else if !wasOn && on {
+	if !wasOn && on || on && !wasOn {
 		display.pixels[y][x] = true
 		display.surface.FillRect(&rect, COLOR_WHITE)
+		clearedPixel = false
+	} else if wasOn && on {
+		display.pixels[y][x] = false
+		display.surface.FillRect(&rect, COLOR_BLACK)
+		clearedPixel = true
+	} else {
+		display.pixels[y][x] = false
+		display.surface.FillRect(&rect, COLOR_BLACK)
+		clearedPixel = false
 	}
 
 	display.window.UpdateSurface()
@@ -93,7 +99,17 @@ func (display *Display) Draw(x int32, y int32, on bool) (wasOn bool) {
 
 // Clears the display.
 func (display *Display) Clear() {
-	display.surface.FillRect(nil, COLOR_BLACK)
+	var y int32
+	var x int32
+
+	for y = 0; y < DISPLAY_HEIGHT; y++ {
+		for x = 0; x < DISPLAY_WIDTH; x++ {
+			display.pixels[y][x] = false
+			rect := sdl.Rect{x * DISPLAY_SCALE, y * DISPLAY_SCALE, DISPLAY_SCALE, DISPLAY_SCALE}
+			display.surface.FillRect(&rect, COLOR_BLACK)
+		}
+	}
+
 	display.window.UpdateSurface()
 }
 
