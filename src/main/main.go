@@ -89,7 +89,7 @@ func main() {
 		elapsedTime := float32(time.Since(frameStartTime).Seconds())
 
 		if elapsedTime < 0.005 {
-			// sdl.Delay(5 - uint32(elapsedTime*1000))
+			sdl.Delay(5 - uint32(elapsedTime*1000))
 		}
 	}
 }

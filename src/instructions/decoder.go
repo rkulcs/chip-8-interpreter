@@ -265,22 +265,14 @@ func decodeDInstruction(instr int32, components *components.Components) {
 				*vf = 1
 			}
 
-			if x < 63 {
-				x++
-			} else {
-				continue
-			}
-
-			// x = (x + 1) % 64
+			x = (x + 1) % 64
 		}
 
 		if y < 31 {
 			y++
 		} else {
-			continue
+			break
 		}
-
-		// y = (y + 1) % 32
 	}
 }
 
@@ -330,15 +322,15 @@ func decodeFInstruction(instr int32, components *components.Components) {
 	case 0x29:
 		components.Registers.I = int16(components.Display.GetFontLocation(*vx))
 		break
-		// case 0x33:
-		// 	storeBCD(vx, components)
-		// 	break
-		// case 0x55:
-		// 	storeV(components)
-		// 	break
-		// case 0x65:
-		// 	loadV(components)
-		// 	break
+	case 0x33:
+		storeBCD(vx, components)
+		break
+	case 0x55:
+		storeV(components)
+		break
+	case 0x65:
+		loadV(components)
+		break
 	}
 }
 

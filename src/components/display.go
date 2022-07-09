@@ -56,7 +56,7 @@ func InitDisplay() Display {
 		panic(err)
 	}
 
-	renderer, err := sdl.CreateRenderer(window, -1, sdl.RENDERER_ACCELERATED)
+	renderer, err := sdl.CreateRenderer(window, -1, sdl.RENDERER_SOFTWARE)
 
 	if err != nil {
 		panic(err)
@@ -79,7 +79,7 @@ func (display *Display) Draw(x int32, y int32, on bool) (clearedPixel bool) {
 
 	wasOn := display.pixels[y][x]
 
-	if !wasOn && on || on && !wasOn {
+	if !wasOn && on {
 		display.pixels[y][x] = true
 		display.renderer.SetDrawColor(255, 255, 255, 255)
 		display.renderer.FillRect(&rect)
@@ -90,9 +90,6 @@ func (display *Display) Draw(x int32, y int32, on bool) (clearedPixel bool) {
 		display.renderer.FillRect(&rect)
 		clearedPixel = true
 	} else {
-		display.pixels[y][x] = false
-		display.renderer.SetDrawColor(0, 0, 0, 0)
-		display.renderer.FillRect(&rect)
 		clearedPixel = false
 	}
 
