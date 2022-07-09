@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func Decode(instr int32, components *components.Components, keyCode int) {
+func Decode(instr int32, components *components.Components) {
 	firstNibble := instr & 0xF000
 
 	switch firstNibble {
@@ -54,10 +54,10 @@ func Decode(instr int32, components *components.Components, keyCode int) {
 		decodeDInstruction(instr, components)
 		break
 	case 0xE000:
-		decodeEInstruction(instr, keyCode, components.Registers)
+		decodeEInstruction(instr, components)
 		break
 	case 0xF000:
-		decodeFInstruction(instr, components, keyCode)
+		decodeFInstruction(instr, components)
 		break
 	}
 }
@@ -284,26 +284,22 @@ func decodeDInstruction(instr int32, components *components.Components) {
 	}
 }
 
-func decodeEInstruction(instr int32, keyCode int, registers *components.Registers) {
-	vx := &(registers.V[(instr>>8)&0x000F])
+func decodeEInstruction(instr int32, components *components.Components) {
+	vx := &(components.Registers.V[(instr>>8)&0x000F])
 	op := instr & 0x00FF
 
-	if keyCode == 0 {
-		return
+	pressed := components.InputMap.GetInputKeyState(*vx)
+
+	if pressed && (op == 0x9E) {
+		components.Registers.PC += 0x2
 	}
 
-	key, pressed := GetInputKeyValue(keyCode)
-
-	if pressed && (op == 0x9E) && (*vx == key) {
-		registers.PC += 0x2
-	}
-
-	if (op == 0xA1) && (*vx != key) {
-		registers.PC += 0x2
+	if !pressed && (op == 0xA1) {
+		components.Registers.PC += 0x2
 	}
 }
 
-func decodeFInstruction(instr int32, components *components.Components, keyCode int) {
+func decodeFInstruction(instr int32, components *components.Components) {
 	x := byte((instr >> 8) & 0x000F)
 	vx := &(components.Registers.V[x])
 	op := instr & 0x00FF
@@ -313,7 +309,7 @@ func decodeFInstruction(instr int32, components *components.Components, keyCode 
 		*vx = components.DelayTimer.Value
 		break
 	case 0x0A:
-		key, pressed := GetInputKeyValue(keyCode)
+		pressed, key := components.InputMap.IsAnyKeyPressed()
 
 		if !pressed {
 			components.Registers.PC -= 2

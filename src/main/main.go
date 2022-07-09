@@ -23,35 +23,27 @@ func getFileName() string {
 	return fileName
 }
 
-func handleInput() (int, bool) {
-	// Stores the virtual key code of the last key pressed
-	keyCode := -1
+func handleInput(components *components.Components) bool {
 
 	event := sdl.PollEvent()
 
 	switch eventType := event.(type) {
 	case *sdl.QuitEvent:
-		return -1, false
+		return false
 	case *sdl.KeyboardEvent:
-		keyCode = int(eventType.Keysym.Sym)
-		return keyCode, true
+		keyCode := int(eventType.Keysym.Sym)
+
+		if eventType.GetType() == sdl.KEYDOWN {
+			components.InputMap.SetInputKeyState(keyCode, true)
+		} else if eventType.GetType() == sdl.KEYUP {
+			components.InputMap.SetInputKeyState(keyCode, false)
+		}
 	}
 
-	// for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
-	// 	switch eventType := event.(type) {
-	// 	case *sdl.QuitEvent:
-	// 		return -1, false
-	// 		break
-	// 	case *sdl.KeyboardEvent:
-	// 		keyCode = int(eventType.Keysym.Sym)
-	// 		break
-	// 	}
-	// }
-
-	return keyCode, true
+	return true
 }
 
-func executeInstructions(keyCode int, components *components.Components) {
+func executeInstructions(components *components.Components) {
 
 	if components.Registers.PC < 4096 {
 		firstPart, err := components.Memory.ReadFrom(int(components.Registers.PC))
@@ -64,7 +56,7 @@ func executeInstructions(keyCode int, components *components.Components) {
 
 		instruction := (int32(firstPart) << 8) + int32(secondPart)
 
-		instructions.Decode(instruction, components, keyCode)
+		instructions.Decode(instruction, components)
 	}
 
 	components.DelayTimer.Decrement()
@@ -88,19 +80,16 @@ func main() {
 
 	running := true
 
-	// The keycode of the last key pressed
-	var keyCode int
-
 	for running {
 		frameStartTime := time.Now()
 
-		keyCode, running = handleInput()
-		executeInstructions(keyCode, &components)
+		running = handleInput(&components)
+		executeInstructions(&components)
 
 		elapsedTime := float32(time.Since(frameStartTime).Seconds())
 
 		if elapsedTime < 0.005 {
-			sdl.Delay(5 - uint32(elapsedTime*1000))
+			// sdl.Delay(5 - uint32(elapsedTime*1000))
 		}
 	}
 }

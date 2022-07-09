@@ -9,6 +9,7 @@ type Components struct {
 	Stack      *Stack
 	DelayTimer *Timer
 	SoundTimer *Timer
+	InputMap   *InputStates
 }
 
 // Component Functions ===//
@@ -20,8 +21,9 @@ func InitComponents(fileName string) Components {
 	stack := NewStack()
 	delayTimer := &Timer{}
 	soundTimer := &Timer{}
+	inputMap := &InputStates{}
 
 	registers.PC = 0x200
 
-	return Components{&display, registers, &memory, stack, delayTimer, soundTimer}
+	return Components{&display, registers, &memory, stack, delayTimer, soundTimer, inputMap}
 }
