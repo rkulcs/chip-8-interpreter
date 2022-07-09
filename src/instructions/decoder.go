@@ -334,15 +334,15 @@ func decodeFInstruction(instr int32, components *components.Components, keyCode 
 	case 0x29:
 		components.Registers.I = int16(components.Display.GetFontLocation(*vx))
 		break
-	case 0x33:
-		storeBCD(vx, components)
-		break
-	case 0x55:
-		storeV(components)
-		break
-	case 0x65:
-		loadV(components)
-		break
+		// case 0x33:
+		// 	storeBCD(vx, components)
+		// 	break
+		// case 0x55:
+		// 	storeV(components)
+		// 	break
+		// case 0x65:
+		// 	loadV(components)
+		// 	break
 	}
 }
 

@@ -38,9 +38,9 @@ const COLOR_BLACK = 0x00000000
 //=== Struct Definitions ===//
 
 type Display struct {
-	window  *sdl.Window
-	surface *sdl.Surface
-	pixels  [DISPLAY_HEIGHT][DISPLAY_WIDTH]bool
+	window   *sdl.Window
+	renderer *sdl.Renderer
+	pixels   [DISPLAY_HEIGHT][DISPLAY_WIDTH]bool
 }
 
 //=== Display Functions ===//
@@ -56,13 +56,13 @@ func InitDisplay() Display {
 		panic(err)
 	}
 
-	surface, err := window.GetSurface()
+	renderer, err := sdl.CreateRenderer(window, -1, sdl.RENDERER_ACCELERATED)
 
 	if err != nil {
 		panic(err)
 	}
 
-	return Display{window, surface, [DISPLAY_HEIGHT][DISPLAY_WIDTH]bool{}}
+	return Display{window, renderer, [DISPLAY_HEIGHT][DISPLAY_WIDTH]bool{}}
 }
 
 // Destroys the SDL window of the display.
@@ -81,19 +81,22 @@ func (display *Display) Draw(x int32, y int32, on bool) (clearedPixel bool) {
 
 	if !wasOn && on || on && !wasOn {
 		display.pixels[y][x] = true
-		display.surface.FillRect(&rect, COLOR_WHITE)
+		display.renderer.SetDrawColor(255, 255, 255, 255)
+		display.renderer.FillRect(&rect)
 		clearedPixel = false
 	} else if wasOn && on {
 		display.pixels[y][x] = false
-		display.surface.FillRect(&rect, COLOR_BLACK)
+		display.renderer.SetDrawColor(0, 0, 0, 0)
+		display.renderer.FillRect(&rect)
 		clearedPixel = true
 	} else {
 		display.pixels[y][x] = false
-		display.surface.FillRect(&rect, COLOR_BLACK)
+		display.renderer.SetDrawColor(0, 0, 0, 0)
+		display.renderer.FillRect(&rect)
 		clearedPixel = false
 	}
 
-	display.window.UpdateSurface()
+	display.renderer.Present()
 	return
 }
 
@@ -105,12 +108,11 @@ func (display *Display) Clear() {
 	for y = 0; y < DISPLAY_HEIGHT; y++ {
 		for x = 0; x < DISPLAY_WIDTH; x++ {
 			display.pixels[y][x] = false
-			rect := sdl.Rect{x * DISPLAY_SCALE, y * DISPLAY_SCALE, DISPLAY_SCALE, DISPLAY_SCALE}
-			display.surface.FillRect(&rect, COLOR_BLACK)
 		}
 	}
 
-	display.window.UpdateSurface()
+	display.renderer.Clear()
+	display.renderer.Present()
 }
 
 // Gets the location of the font of the provided hexadecimal digit.
