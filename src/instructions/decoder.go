@@ -176,13 +176,13 @@ func decode8Instruction(instr int32, registers *components.Registers) {
 		*vx /= 0x2
 		break
 	case 0x7:
-		*vx = *vy - *vx
-
 		if *vy > *vx {
 			*vf = 1
 		} else {
 			*vf = 0
 		}
+
+		*vx = *vy - *vx
 
 		break
 	case 0xE:
@@ -326,10 +326,10 @@ func decodeFInstruction(instr int32, components *components.Components) {
 		storeBCD(vx, components)
 		break
 	case 0x55:
-		storeV(components)
+		storeV(x, components)
 		break
 	case 0x65:
-		loadV(components)
+		loadV(x, components)
 		break
 	}
 }
@@ -349,19 +349,23 @@ func storeBCD(vx *byte, components *components.Components) {
 	}
 }
 
-func storeV(components *components.Components) {
+func storeV(x byte, components *components.Components) {
 	currentAddress := components.Registers.I
 
-	for i := 0; i < 16; i++ {
+	var i byte
+
+	for i = 0; i <= x; i++ {
 		components.Memory.WriteTo(int(currentAddress), components.Registers.V[i])
 		currentAddress++
 	}
 }
 
-func loadV(components *components.Components) {
+func loadV(x byte, components *components.Components) {
 	currentAddress := components.Registers.I
 
-	for i := 0; i < 16; i++ {
+	var i byte
+
+	for i = 0; i <= x; i++ {
 		value, err := components.Memory.ReadFrom((int(currentAddress)))
 
 		if err != nil {

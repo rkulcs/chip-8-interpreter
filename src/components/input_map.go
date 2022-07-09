@@ -43,7 +43,12 @@ func (inputStates *InputStates) SetInputKeyState(keyCode int, newState bool) {
 }
 
 func (inputStates *InputStates) GetInputKeyState(code byte) bool {
-	return inputStates.isPressed[code]
+
+	if code >= 0x0 && code <= 0xF {
+		return inputStates.isPressed[code]
+	} else {
+		return false
+	}
 }
 
 func (inputStates *InputStates) IsAnyKeyPressed() (bool, byte) {

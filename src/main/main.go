@@ -58,9 +58,6 @@ func executeInstructions(components *components.Components) {
 
 		instructions.Decode(instruction, components)
 	}
-
-	components.DelayTimer.Decrement()
-	components.SoundTimer.Decrement()
 }
 
 func main() {
@@ -86,10 +83,13 @@ func main() {
 		running = handleInput(&components)
 		executeInstructions(&components)
 
+		components.DelayTimer.Decrement()
+		components.SoundTimer.Decrement()
+
 		elapsedTime := float32(time.Since(frameStartTime).Seconds())
 
 		if elapsedTime < 0.005 {
-			sdl.Delay(5 - uint32(elapsedTime*1000))
+			// sdl.Delay(5 - uint32(elapsedTime*1000))
 		}
 	}
 }
