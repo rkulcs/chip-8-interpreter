@@ -67,6 +67,7 @@ func InitDisplay() Display {
 
 // Destroys the SDL window of the display.
 func (display *Display) Destroy() {
+	display.renderer.Destroy()
 	display.window.Destroy()
 }
 
@@ -93,7 +94,6 @@ func (display *Display) Draw(x int32, y int32, on bool) (clearedPixel bool) {
 		clearedPixel = false
 	}
 
-	display.renderer.Present()
 	return
 }
 
@@ -108,7 +108,11 @@ func (display *Display) Clear() {
 		}
 	}
 
+	display.renderer.SetDrawColor(0, 0, 0, 0)
 	display.renderer.Clear()
+}
+
+func (display *Display) Present() {
 	display.renderer.Present()
 }
 

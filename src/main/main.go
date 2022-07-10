@@ -8,10 +8,12 @@ import (
 	"os"
 	"time"
 
+	"github.com/veandco/go-sdl2/mix"
 	"github.com/veandco/go-sdl2/sdl"
 )
 
 const TARGET_FPS = 120
+const SFX_PATH = "../../assets/sfx.wav"
 
 // Prompts to the user to enter the name of a CHIP-8 file.
 // Returns the name of the file.
@@ -71,6 +73,23 @@ func main() {
 		panic(err)
 	}
 
+	// Initialize audio
+	if err := mix.OpenAudio(mix.DEFAULT_FREQUENCY, mix.DEFAULT_FORMAT,
+		mix.DEFAULT_CHANNELS, mix.DEFAULT_CHUNKSIZE); err != nil {
+		panic(err)
+	}
+
+	defer mix.CloseAudio()
+
+	// Load sound effect
+	sound, err := mix.LoadWAV(SFX_PATH)
+
+	if err != nil {
+		panic(err)
+	}
+
+	defer sound.Free()
+
 	defer sdl.Quit()
 
 	// Initialize CHIP-8 components and load file contents into memory
@@ -89,6 +108,10 @@ func main() {
 
 		components.DelayTimer.Decrement()
 		components.SoundTimer.Decrement()
+
+		if components.SoundTimer.Value != 0 {
+			sound.Play(mix.DEFAULT_CHANNELS, 1)
+		}
 
 		components.Display.Present()
 
