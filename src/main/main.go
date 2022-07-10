@@ -11,12 +11,14 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 )
 
+const TARGET_FPS = 120
+
 // Prompts to the user to enter the name of a CHIP-8 file.
 // Returns the name of the file.
 func getFileName() string {
 	inputReader := bufio.NewScanner(os.Stdin)
 
-	fmt.Print("Enter a CHIP-8 file name: ")
+	fmt.Print("Enter a CHIP-8 file path: ")
 	inputReader.Scan()
 	fileName := inputReader.Text()
 
@@ -25,18 +27,18 @@ func getFileName() string {
 
 func handleInput(components *components.Components) bool {
 
-	event := sdl.PollEvent()
+	for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
+		switch eventType := event.(type) {
+		case *sdl.QuitEvent:
+			return false
+		case *sdl.KeyboardEvent:
+			keyCode := int(eventType.Keysym.Sym)
 
-	switch eventType := event.(type) {
-	case *sdl.QuitEvent:
-		return false
-	case *sdl.KeyboardEvent:
-		keyCode := int(eventType.Keysym.Sym)
-
-		if eventType.GetType() == sdl.KEYDOWN {
-			components.InputMap.SetInputKeyState(keyCode, true)
-		} else if eventType.GetType() == sdl.KEYUP {
-			components.InputMap.SetInputKeyState(keyCode, false)
+			if eventType.GetType() == sdl.KEYDOWN {
+				components.InputMap.SetInputKeyState(keyCode, true)
+			} else if eventType.GetType() == sdl.KEYUP {
+				components.InputMap.SetInputKeyState(keyCode, false)
+			}
 		}
 	}
 
@@ -77,6 +79,8 @@ func main() {
 
 	running := true
 
+	secondsPerFrame := 1.0 / TARGET_FPS
+
 	for running {
 		frameStartTime := time.Now()
 
@@ -86,10 +90,12 @@ func main() {
 		components.DelayTimer.Decrement()
 		components.SoundTimer.Decrement()
 
+		components.Display.Present()
+
 		elapsedTime := float32(time.Since(frameStartTime).Seconds())
 
-		if elapsedTime < 0.005 {
-			// sdl.Delay(5 - uint32(elapsedTime*1000))
+		if elapsedTime < float32(secondsPerFrame) {
+			sdl.Delay(uint32((float32(secondsPerFrame) - elapsedTime) * 1000))
 		}
 	}
 }
