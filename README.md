@@ -18,7 +18,7 @@ The sound effect used by the interpreter was generated using [jsfxr](https://sfx
 # Usage
 
 ```
-cd src/main<br>
+cd src/main
 go build .
 ./main
 ```
