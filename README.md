@@ -14,3 +14,11 @@ The sound effect used by the interpreter was generated using [jsfxr](https://sfx
 # Requirements
 
 - [SDL2 binding for Go](https://github.com/veandco/go-sdl2)
+
+# Usage
+
+```
+cd src/main<br>
+go build .
+./main
+```
